@@ -6,5 +6,5 @@ services:
     ports:
       - 5000:5000
     volumes:
-      - .:/src
-    entrypoint: python3 src/run_dev_server.py
+      - .:/tabletop
+    entrypoint: python3 tabletop/run_dev_server.py
