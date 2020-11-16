@@ -20,10 +20,13 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    this.socket.on('gameState', function (gameState) {
-      console.log(gameState);
-      this.setState({pieceToCoordinates: gameState});
-    }.bind(this));
+    this.socket.on(
+      "gameState",
+      function (gameState) {
+        console.log(gameState);
+        this.setState({ pieceToCoordinates: gameState });
+      }.bind(this)
+    );
   }
 
   calculateAspectRatioFit(originalWidth, originalHeight, maxWidth, maxHeight) {
@@ -36,7 +39,7 @@ class Board extends React.Component {
   }
 
   resizeImgAndSetVisible = (e) => {
-    const buffer = 5;
+    const buffer = 7;
     const fit = this.calculateAspectRatioFit(
       e.target.width,
       e.target.height,
@@ -51,12 +54,18 @@ class Board extends React.Component {
     }
   };
 
-  selectAvatar = () => {
+  selectAvatar = (e) => {
     this.setState({ selected: true });
+    e.target.style.border = "solid";
+    e.target.style.borderColor = "blue";
+    e.target.style.borderRadius = "100%";
   };
 
-  unselectAvatar = () => {
+  unselectAvatar = (e) => {
     this.setState({ selected: false });
+    e.target.style.border = "";
+    e.target.style.borderColor = "";
+    e.target.style.borderRadius = "";
   };
 
   moveAvatarWithKeys = (e) => {
@@ -68,19 +77,29 @@ class Board extends React.Component {
     switch (e.key) {
       case "KeyS":
       case "ArrowDown":
-        newState = { bard: { row: curRow + 1, col: curCol } };
+        newState = {
+          bard: {
+            row: Math.min(curRow + 1, this.state.numRows - 1),
+            col: curCol,
+          },
+        };
         break;
       case "KeyW":
       case "ArrowUp":
-        newState = { bard: { row: curRow - 1, col: curCol } };
+        newState = { bard: { row: Math.max(curRow - 1, 0), col: curCol } };
         break;
       case "KeyA":
       case "ArrowLeft":
-        newState = { bard: { row: curRow, col: curCol - 1 } };
+        newState = { bard: { row: curRow, col: Math.max(curCol - 1, 0) } };
         break;
       case "KeyD":
       case "ArrowRight":
-        newState = { bard: { row: curRow, col: curCol + 1 } };
+        newState = {
+          bard: {
+            row: curRow,
+            col: Math.min(curCol + 1, this.state.numCols - 1),
+          },
+        };
         break;
       default:
     }
@@ -98,6 +117,7 @@ class Board extends React.Component {
       <img
         alt="A bard token"
         id="bardPicture"
+        style={{margin: "auto"}}
         tabIndex={0}
         src={bard_picture}
         draggable={true}
@@ -115,7 +135,7 @@ class Board extends React.Component {
       avatarCoords["row"] * this.state.numCols + avatarCoords["col"];
 
     return (
-      <div>
+      <div className="board">
         <div
           className="wrapper"
           style={{
@@ -125,7 +145,9 @@ class Board extends React.Component {
         >
           {[...Array(this.state.numCols * this.state.numRows).keys()].map(
             (i) => (
-              <div key={i}>{i === avatarIndex ? avatar : null}</div>
+              <div key={i} style={{ display: "flex" }}>
+                {i === avatarIndex ? avatar : null}
+              </div>
             )
           )}
         </div>
