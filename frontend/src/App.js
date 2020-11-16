@@ -12,7 +12,8 @@ class App extends React.Component {
     this.mainContentRef = React.createRef();
     this.state = {
       isNavOpen: true,
-      drawingColor: ""
+      drawingColor: "",
+      selectedToken: ""
     };
   }
 
@@ -28,14 +29,24 @@ class App extends React.Component {
     this.setState({ isNavOpen: true });
   };
 
+  setSelectedToken = (token) => {
+    this.setState({selectedToken: token});
+  }
+
   setDrawingColor = (color) => {
     this.setState({drawingColor: color});
   }
 
   render() {
+    let cursor = "";
+    if (this.state.drawingColor !== "") {
+      cursor = "crosshair"
+    } else if (this.state.selectedToken !== "") {
+      cursor = "copy"
+    }
     return (
-      <div className="App" style={this.state.drawingColor !== "" ? {cursor: "crosshair"} : null}>
-        <div id="mySidenav" class="sidenav" ref={this.navBarRef}>
+      <div className="App" style={{cursor: cursor}}>
+        <div id="mySidenav" className="sidenav" ref={this.navBarRef}>
           <FontAwesomeIcon
             icon={this.state.isNavOpen ? faArrowLeft : faArrowRight}
             onClick={this.state.isNavOpen ? this.closeNav : this.openNav}
@@ -46,13 +57,13 @@ class App extends React.Component {
               right: "10px",
             }}
           />
-          <Menu setDrawingColor={this.setDrawingColor}/>
+          <Menu setSelectedToken={this.setSelectedToken} setDrawingColor={this.setDrawingColor}/>
         </div>
         <div
           ref={this.mainContentRef}
           style={{ paddingLeft: 150, textAlign:"center", transition: "padding-left .5s" }}
         >
-          <Board drawingColor={this.state.drawingColor}/>
+          <Board drawingColor={this.state.drawingColor} selectedToken={this.state.selectedToken}/>
         </div>
       </div>
     );

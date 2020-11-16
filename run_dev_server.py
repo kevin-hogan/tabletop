@@ -6,16 +6,25 @@ app = Flask(__name__, static_folder="frontend/build")
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-gameState = { "bard": { "row": 0, "col": 0 } }
+player_positions = {}
+board_colors = {}
 
 @socketio.on('connect')
 def on_connect():
-    emit('gameState', gameState)
+    emit('playerPositions', player_positions)
+    emit('boardColors', board_colors)
 
-@socketio.on('updateGameState')
-def update_game_state(state_update):
-    gameState["bard"] = state_update["bard"]
-    emit('gameState', gameState, broadcast=True)
+@socketio.on('updatePlayerPositions')
+def update_game_state(player_position_update):
+    global player_positions
+    player_positions = {**player_positions, **player_position_update}
+    emit('playerPositions', player_positions, broadcast=True)
+
+@socketio.on('updateBoardColors')
+def update_board_colors(board_colors_update):
+    global board_colors
+    board_colors = {**board_colors, **board_colors_update}
+    emit('boardColors', board_colors, broadcast=True)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

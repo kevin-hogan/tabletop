@@ -1,6 +1,5 @@
 import React from "react";
 import "./Board.css";
-import bard_picture from "./images/bard.png";
 import io from "socket.io-client";
 
 const BOARD_HEIGHT = 800;
@@ -14,17 +13,23 @@ class Board extends React.Component {
       socket: null,
       numRows: 13,
       numCols: 21,
-      pieceToCoordinates: { bard: { row: 0, col: 0 } },
-      selected: false,
+      pieceToCoordinates: {},
+      selected: {},
+      boardColors: {},
     };
   }
 
   componentDidMount() {
     this.socket.on(
-      "gameState",
-      function (gameState) {
-        console.log(gameState);
-        this.setState({ pieceToCoordinates: gameState });
+      "playerPositions",
+      function (playerPositions) {
+        this.setState({ pieceToCoordinates: playerPositions });
+      }.bind(this)
+    );
+    this.socket.on(
+      "boardColors",
+      function (boardColors) {
+        this.setState({ boardColors: boardColors });
       }.bind(this)
     );
   }
@@ -38,7 +43,7 @@ class Board extends React.Component {
     return { width: originalWidth * ratio, height: originalHeight * ratio };
   }
 
-  resizeImgAndSetVisible = (e) => {
+  resizeImgAndSetVisible = (e, imageKey) => {
     const buffer = 7;
     const fit = this.calculateAspectRatioFit(
       e.target.width,
@@ -49,91 +54,105 @@ class Board extends React.Component {
     e.target.width = fit["width"];
     e.target.height = fit["height"];
     e.target.hidden = false;
-    if (this.state.selected) {
+    if (this.state.selected[imageKey]) {
       e.target.focus();
     }
   };
 
-  selectAvatar = (e) => {
-    this.setState({ selected: true });
+  selectAvatar = (e, imageKey) => {
+    const newSelected = {...this.state.selected}
+    newSelected[imageKey] = true;
+    this.setState({ selected: newSelected });
     e.target.style.border = "solid";
     e.target.style.borderColor = "blue";
     e.target.style.borderRadius = "100%";
   };
 
-  unselectAvatar = (e) => {
-    this.setState({ selected: false });
+  unselectAvatar = (e, imageKey) => {
+    const newSelected = {...this.state.selected}
+    newSelected[imageKey] = false;
+    this.setState({ selected: newSelected });
     e.target.style.border = "";
     e.target.style.borderColor = "";
     e.target.style.borderRadius = "";
   };
 
-  moveAvatarWithKeys = (e) => {
+  moveAvatarWithKeys = (e, imageKey) => {
     e.preventDefault();
     e.target.focus();
-    const curRow = this.state.pieceToCoordinates["bard"]["row"];
-    const curCol = this.state.pieceToCoordinates["bard"]["col"];
-    let newState = null;
+    const curRow = this.state.pieceToCoordinates[imageKey]["row"];
+    const curCol = this.state.pieceToCoordinates[imageKey]["col"];
+    let newPositions = {};
     switch (e.key) {
       case "KeyS":
       case "ArrowDown":
-        newState = {
-          bard: {
-            row: Math.min(curRow + 1, this.state.numRows - 1),
-            col: curCol,
-          },
+        newPositions[imageKey] = {
+          row: Math.min(curRow + 1, this.state.numRows - 1),
+          col: curCol,
         };
         break;
       case "KeyW":
       case "ArrowUp":
-        newState = { bard: { row: Math.max(curRow - 1, 0), col: curCol } };
+        newPositions[imageKey] = { row: Math.max(curRow - 1, 0), col: curCol };
         break;
       case "KeyA":
       case "ArrowLeft":
-        newState = { bard: { row: curRow, col: Math.max(curCol - 1, 0) } };
+        newPositions[imageKey] = { row: curRow, col: Math.max(curCol - 1, 0) };
         break;
       case "KeyD":
       case "ArrowRight":
-        newState = {
-          bard: {
-            row: curRow,
-            col: Math.min(curCol + 1, this.state.numCols - 1),
-          },
+        newPositions[imageKey] = {
+          row: curRow,
+          col: Math.min(curCol + 1, this.state.numCols - 1),
         };
         break;
       default:
     }
 
-    if (newState != null) {
+    if (newPositions !== {}) {
       this.setState({
-        pieceToCoordinates: newState,
+        pieceToCoordinates: {...this.state.pieceToCoordinates, ...newPositions},
       });
-      this.socket.emit("updateGameState", newState);
+      this.socket.emit("updatePlayerPositions", newPositions);
     }
   };
 
-  render() {
-    const avatar = (
+  handleCellClick = (cellIndex) => {
+    if (this.props.drawingColor !== "") {
+      const newBoardColors = { ...this.state.boardColors };
+      newBoardColors[cellIndex] = this.props.drawingColor;
+      this.setState({ boardColors: newBoardColors });
+      this.socket.emit("updateBoardColors", newBoardColors);
+    } else if (this.props.selectedToken !== "") {
+      const newPieceToCoordinates = { ...this.state.pieceToCoordinates };
+      newPieceToCoordinates[this.props.selectedToken] = {
+        row: Math.floor(cellIndex / this.state.numCols),
+        col: cellIndex % this.state.numCols,
+      };
+      this.setState({ pieceToCoordinates: newPieceToCoordinates });
+      this.socket.emit("updatePlayerPositions", newPieceToCoordinates);
+    }
+  };
+
+  renderAvatar = (imageSrc) => {
+    return (
       <img
         alt="A bard token"
-        id="bardPicture"
-        style={{margin: "auto"}}
+        style={{ margin: "auto" }}
         tabIndex={0}
-        src={bard_picture}
+        src={imageSrc}
         draggable={true}
         // ondragstart="drag(event)"
-        onLoad={this.resizeImgAndSetVisible}
+        onLoad={(e) => this.resizeImgAndSetVisible(e, imageSrc)}
         hidden={true}
-        onKeyDown={this.moveAvatarWithKeys}
-        onFocus={this.selectAvatar}
-        onBlur={this.unselectAvatar}
+        onKeyDown={(e) => this.moveAvatarWithKeys(e, imageSrc)}
+        onFocus={(e) => this.selectAvatar(e, imageSrc)}
+        onBlur={(e) => this.unselectAvatar(e, imageSrc)}
       ></img>
     );
+  };
 
-    const avatarCoords = this.state.pieceToCoordinates["bard"];
-    const avatarIndex =
-      avatarCoords["row"] * this.state.numCols + avatarCoords["col"];
-
+  render() {
     return (
       <div className="board">
         <div
@@ -145,8 +164,19 @@ class Board extends React.Component {
         >
           {[...Array(this.state.numCols * this.state.numRows).keys()].map(
             (i) => (
-              <div key={i} style={{ display: "flex" }}>
-                {i === avatarIndex ? avatar : null}
+              <div
+                key={i}
+                onClick={() => this.handleCellClick(i)}
+                style={{
+                  display: "flex",
+                  backgroundColor: this.state.boardColors[i],
+                }}
+              >
+                {Object.entries(this.state.pieceToCoordinates)
+                  .filter(
+                    ([_, { row, col }]) => row * this.state.numCols + col === i
+                  )
+                  .map(([imgUrl, _]) => this.renderAvatar(imgUrl))}
               </div>
             )
           )}

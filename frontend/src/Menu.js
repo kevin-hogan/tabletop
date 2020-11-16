@@ -1,5 +1,8 @@
 import React from "react";
 import "./Menu.css";
+import bard_picture from "./images/bard.png";
+import cleric_picture from "./images/cleric.png";
+import knight_picture from "./images/knight.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserPlus, faPaintBrush } from "@fortawesome/free-solid-svg-icons";
 
@@ -12,20 +15,45 @@ class Menu extends React.Component {
   render() {
     return (
       <div className="container">
-        <FontAwesomeIcon
-          style={{ fontSize: "60px", margin: "10px", cursor: "pointer" }}
-          icon={faUserPlus}
-        />
-        <div class="dropdown" style={{cursor: "pointer"}}>
+        <div className="dropdown" style={{ cursor: "pointer" }}>
+          <FontAwesomeIcon
+            style={{ fontSize: "60px", margin: "10px", cursor: "pointer" }}
+            icon={faUserPlus}
+          />
+          <div className="dropdown-content">
+            <a href="#" onClick={() => this.props.setSelectedToken(bard_picture)}>
+              Bard
+            </a>
+            <a href="#" onClick={() => this.props.setSelectedToken(cleric_picture)}>
+              Cleric
+            </a>
+            <a href="#" onClick={() => this.props.setSelectedToken(knight_picture)}>
+              Knight
+            </a>
+            <a href="#" onClick={() => this.props.setSelectedToken("")}>
+              Done Adding Tokens
+            </a>
+          </div>
+        </div>
+        <div className="dropdown" style={{ cursor: "pointer" }}>
           <FontAwesomeIcon
             className="dropbtn"
             style={{ fontSize: "60px", margin: "10px", cursor: "pointer" }}
             icon={faPaintBrush}
           />
-          <div class="dropdown-content">
-            <a href="#" onClick={() => this.props.setDrawingColor("white")}>White</a>
-            <a href="#" onClick={() => this.props.setDrawingColor("black")}>Black</a>
-            <a href="#" onClick={() => this.props.setDrawingColor("blue")}>Blue</a>
+          <div className="dropdown-content">
+            <a href="#" onClick={() => this.props.setDrawingColor("white")}>
+              White
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("black")}>
+              Black
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("blue")}>
+              Blue
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("")}>
+              Done Drawing
+            </a>
           </div>
         </div>
       </div>
