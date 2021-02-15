@@ -16,6 +16,7 @@ class Board extends React.Component {
       pieceToCoordinates: {},
       selected: {},
       boardColors: {},
+      dropTargetIndex: null
     };
   }
 
@@ -117,6 +118,16 @@ class Board extends React.Component {
     }
   };
 
+  addTokenToBoard = (tokenUrl, cellIndex) => {
+    const newPieceToCoordinates = { ...this.state.pieceToCoordinates };
+    newPieceToCoordinates[tokenUrl] = {
+      row: Math.floor(cellIndex / this.state.numCols),
+      col: cellIndex % this.state.numCols,
+    };
+    this.setState({ pieceToCoordinates: newPieceToCoordinates });
+    this.socket.emit("updatePlayerPositions", newPieceToCoordinates);
+  }
+
   handleCellClick = (cellIndex) => {
     if (this.props.drawingColor !== "") {
       const newBoardColors = { ...this.state.boardColors };
@@ -124,15 +135,19 @@ class Board extends React.Component {
       this.setState({ boardColors: newBoardColors });
       this.socket.emit("updateBoardColors", newBoardColors);
     } else if (this.props.selectedToken !== "") {
-      const newPieceToCoordinates = { ...this.state.pieceToCoordinates };
-      newPieceToCoordinates[this.props.selectedToken] = {
-        row: Math.floor(cellIndex / this.state.numCols),
-        col: cellIndex % this.state.numCols,
-      };
-      this.setState({ pieceToCoordinates: newPieceToCoordinates });
-      this.socket.emit("updatePlayerPositions", newPieceToCoordinates);
+      this.addTokenToBoard(this.props.selectedToken, cellIndex);
     }
   };
+
+  onAvatarDrag = (e) => {
+    e.target.style.display = "none";
+  }
+
+  onAvatarDragEnd = (e, tokenUrl) => {
+    e.target.style.display = "";
+    this.addTokenToBoard(tokenUrl, this.state.dropTargetIndex);
+    this.selectAvatar(e, tokenUrl);
+  }
 
   renderAvatar = (imageSrc) => {
     return (
@@ -142,7 +157,8 @@ class Board extends React.Component {
         tabIndex={0}
         src={imageSrc}
         draggable={true}
-        // ondragstart="drag(event)"
+        onDrag={this.onAvatarDrag}
+        onDragEnd={(e) => this.onAvatarDragEnd(e, imageSrc)}
         onLoad={(e) => this.resizeImgAndSetVisible(e, imageSrc)}
         hidden={true}
         onKeyDown={(e) => this.moveAvatarWithKeys(e, imageSrc)}
@@ -167,6 +183,8 @@ class Board extends React.Component {
               <div
                 key={i}
                 onClick={() => this.handleCellClick(i)}
+                onDragOver={(e) => {e.preventDefault();this.setState({dropTargetIndex: i})}}
+                onDrop={(e) => e.preventDefault()}
                 style={{
                   display: "flex",
                   backgroundColor: this.state.boardColors[i],
