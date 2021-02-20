@@ -168,7 +168,6 @@ class Board extends React.Component {
   };
 
   render() {
-    console.log(this.state.tokenIdToTokenData);
     return (
       <div className="board">
         <div
