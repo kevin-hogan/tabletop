@@ -21,13 +21,13 @@ class Menu extends React.Component {
             icon={faUserPlus}
           />
           <div className="dropdown-content">
-            <a href="#" onClick={() => this.props.setSelectedToken(bard_picture)}>
+            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": bard_picture})}>
               Bard
             </a>
-            <a href="#" onClick={() => this.props.setSelectedToken(cleric_picture)}>
+            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": cleric_picture})}>
               Cleric
             </a>
-            <a href="#" onClick={() => this.props.setSelectedToken(knight_picture)}>
+            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": knight_picture})}>
               Knight
             </a>
             <a href="#" onClick={() => this.props.setSelectedToken("")}>

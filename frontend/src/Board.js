@@ -13,7 +13,7 @@ class Board extends React.Component {
       socket: null,
       numRows: 13,
       numCols: 21,
-      pieceToCoordinates: {},
+      tokenIdToTokenData: {},
       selected: {},
       boardColors: {},
       dropTargetIndex: null
@@ -24,7 +24,7 @@ class Board extends React.Component {
     this.socket.on(
       "playerPositions",
       function (playerPositions) {
-        this.setState({ pieceToCoordinates: playerPositions });
+        this.setState({ tokenIdToTokenData: playerPositions });
       }.bind(this)
     );
     this.socket.on(
@@ -44,7 +44,7 @@ class Board extends React.Component {
     return { width: originalWidth * ratio, height: originalHeight * ratio };
   }
 
-  resizeImgAndSetVisible = (e, imageKey) => {
+  resizeImgAndSetVisible = (e, token) => {
     const buffer = 7;
     const fit = this.calculateAspectRatioFit(
       e.target.width,
@@ -55,77 +55,74 @@ class Board extends React.Component {
     e.target.width = fit["width"];
     e.target.height = fit["height"];
     e.target.hidden = false;
-    if (this.state.selected[imageKey]) {
+    if (this.state.selected[token.id]) {
       e.target.focus();
     }
   };
 
-  selectAvatar = (e, imageKey) => {
+  selectToken = (e, token) => {
     const newSelected = {...this.state.selected}
-    newSelected[imageKey] = true;
+    newSelected[token.id] = true;
     this.setState({ selected: newSelected });
     e.target.style.border = "solid";
     e.target.style.borderColor = "blue";
     e.target.style.borderRadius = "100%";
   };
 
-  unselectAvatar = (e, imageKey) => {
+  unselectToken = (e, token) => {
     const newSelected = {...this.state.selected}
-    newSelected[imageKey] = false;
+    newSelected[token.id] = false;
     this.setState({ selected: newSelected });
     e.target.style.border = "";
     e.target.style.borderColor = "";
     e.target.style.borderRadius = "";
   };
 
-  moveAvatarWithKeys = (e, imageKey) => {
+  updateTokenPosition = (token, row, col) => {
+    const newTokenData = {...this.state.tokenIdToTokenData[token.id], row: row, col: col};
+    this.setState({
+      tokenIdToTokenData: {...this.state.tokenIdToTokenData, ...{[token.id]: newTokenData}},
+    });
+    this.socket.emit("updatePlayerPositions", {[token.id]: newTokenData});
+  }
+
+  moveTokenWithKeys = (e, token) => {
     e.preventDefault();
     e.target.focus();
-    const curRow = this.state.pieceToCoordinates[imageKey]["row"];
-    const curCol = this.state.pieceToCoordinates[imageKey]["col"];
-    let newPositions = {};
+    const curRow = this.state.tokenIdToTokenData[token.id]["row"];
+    const curCol = this.state.tokenIdToTokenData[token.id]["col"];
     switch (e.key) {
       case "KeyS":
       case "ArrowDown":
-        newPositions[imageKey] = {
-          row: Math.min(curRow + 1, this.state.numRows - 1),
-          col: curCol,
-        };
+        this.updateTokenPosition(token, Math.min(curRow + 1, this.state.numRows - 1), curCol);
         break;
       case "KeyW":
       case "ArrowUp":
-        newPositions[imageKey] = { row: Math.max(curRow - 1, 0), col: curCol };
+        this.updateTokenPosition(token, Math.max(curRow - 1, 0), curCol);
         break;
       case "KeyA":
       case "ArrowLeft":
-        newPositions[imageKey] = { row: curRow, col: Math.max(curCol - 1, 0) };
+        this.updateTokenPosition(token, curRow, Math.max(curCol - 1, 0));
         break;
       case "KeyD":
       case "ArrowRight":
-        newPositions[imageKey] = {
-          row: curRow,
-          col: Math.min(curCol + 1, this.state.numCols - 1),
-        };
+        this.updateTokenPosition(token, curRow, Math.min(curCol + 1, this.state.numCols - 1));
         break;
       default:
     }
-
-    if (newPositions !== {}) {
-      this.setState({
-        pieceToCoordinates: {...this.state.pieceToCoordinates, ...newPositions},
-      });
-      this.socket.emit("updatePlayerPositions", newPositions);
-    }
   };
 
-  addTokenToBoard = (tokenUrl, cellIndex) => {
-    const newPieceToCoordinates = { ...this.state.pieceToCoordinates };
-    newPieceToCoordinates[tokenUrl] = {
+  addTokenToBoard = (token, cellIndex) => {
+    const newTokenIdToTokenData = { ...this.state.tokenIdToTokenData };
+    const newTokenId = Math.random()
+    newTokenIdToTokenData[newTokenId] = {
+      ...token,
+      id: newTokenId,
       row: Math.floor(cellIndex / this.state.numCols),
       col: cellIndex % this.state.numCols,
     };
-    this.setState({ pieceToCoordinates: newPieceToCoordinates });
-    this.socket.emit("updatePlayerPositions", newPieceToCoordinates);
+    this.setState({ tokenIdToTokenData: newTokenIdToTokenData });
+    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
   }
 
   handleCellClick = (cellIndex) => {
@@ -139,36 +136,39 @@ class Board extends React.Component {
     }
   };
 
-  onAvatarDrag = (e) => {
+  onTokenDrag = (e) => {
     e.target.style.display = "none";
   }
 
-  onAvatarDragEnd = (e, tokenUrl) => {
+  onTokenDragEnd = (e, token) => {
     e.target.style.display = "";
-    this.addTokenToBoard(tokenUrl, this.state.dropTargetIndex);
-    this.selectAvatar(e, tokenUrl);
+    const i = this.state.dropTargetIndex;
+    this.updateTokenPosition(token, Math.floor(i / this.state.numCols), i % this.state.numCols);
+    this.selectToken(e, token);
   }
 
-  renderAvatar = (imageSrc) => {
+  renderToken = (token) => {
     return (
       <img
-        alt="A bard token"
+        key={token.id}
+        alt="A character token"
         style={{ margin: "auto" }}
         tabIndex={0}
-        src={imageSrc}
+        src={token.imgUrl}
         draggable={true}
-        onDrag={this.onAvatarDrag}
-        onDragEnd={(e) => this.onAvatarDragEnd(e, imageSrc)}
-        onLoad={(e) => this.resizeImgAndSetVisible(e, imageSrc)}
-        hidden={true}
-        onKeyDown={(e) => this.moveAvatarWithKeys(e, imageSrc)}
-        onFocus={(e) => this.selectAvatar(e, imageSrc)}
-        onBlur={(e) => this.unselectAvatar(e, imageSrc)}
+        onDrag={this.onTokenDrag}
+        onDragEnd={(e) => this.onTokenDragEnd(e, token)}
+        onLoad={(e) => this.resizeImgAndSetVisible(e, token)}
+        hidden={true} // temporary until resizing
+        onKeyDown={(e) => this.moveTokenWithKeys(e, token)}
+        onFocus={(e) => this.selectToken(e, token)}
+        onBlur={(e) => this.unselectToken(e, token)}
       ></img>
     );
   };
 
   render() {
+    console.log(this.state.tokenIdToTokenData);
     return (
       <div className="board">
         <div
@@ -190,11 +190,11 @@ class Board extends React.Component {
                   backgroundColor: this.state.boardColors[i],
                 }}
               >
-                {Object.entries(this.state.pieceToCoordinates)
+                {Object.entries(this.state.tokenIdToTokenData)
                   .filter(
                     ([_, { row, col }]) => row * this.state.numCols + col === i
                   )
-                  .map(([imgUrl, _]) => this.renderAvatar(imgUrl))}
+                  .map(([_, token]) => this.renderToken(token))}
               </div>
             )
           )}
