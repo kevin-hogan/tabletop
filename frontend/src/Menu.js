@@ -51,17 +51,23 @@ class Menu extends React.Component {
             icon={faPaintBrush}
           />
           <div className="dropdown-content">
-            <a href="#" onClick={() => this.props.setDrawingColor("white")}>
-              White
-            </a>
-            <a href="#" onClick={() => this.props.setDrawingColor("black")}>
-              Black
-            </a>
-            <a href="#" onClick={() => this.props.setDrawingColor("blue")}>
-              Blue
-            </a>
             <a href="#" onClick={() => this.props.setDrawingColor("")}>
               Done Drawing
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("white")}>
+              white
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("black")}>
+              black
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("blue")}>
+              blue
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("orange")}>
+              orange
+            </a>
+            <a href="#" onClick={() => this.props.setDrawingColor("green")}>
+              green
             </a>
           </div>
         </div>

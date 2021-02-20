@@ -80,10 +80,11 @@ class Board extends React.Component {
 
   updateTokenPosition = (token, row, col) => {
     const newTokenData = {...this.state.tokenIdToTokenData[token.id], row: row, col: col};
+    const newTokenIdToTokenData = {...this.state.tokenIdToTokenData, ...{[token.id]: newTokenData}};
     this.setState({
-      tokenIdToTokenData: {...this.state.tokenIdToTokenData, ...{[token.id]: newTokenData}},
+      tokenIdToTokenData: newTokenIdToTokenData,
     });
-    this.socket.emit("updatePlayerPositions", {[token.id]: newTokenData});
+    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
   }
 
   moveTokenWithKeys = (e, token) => {
@@ -121,6 +122,13 @@ class Board extends React.Component {
       row: Math.floor(cellIndex / this.state.numCols),
       col: cellIndex % this.state.numCols,
     };
+    this.setState({ tokenIdToTokenData: newTokenIdToTokenData });
+    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
+  }
+
+  removeTokenFromBoard = (token) => {
+    const newTokenIdToTokenData = { ...this.state.tokenIdToTokenData };
+    delete newTokenIdToTokenData[token.id];
     this.setState({ tokenIdToTokenData: newTokenIdToTokenData });
     this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
   }
@@ -163,6 +171,7 @@ class Board extends React.Component {
         onKeyDown={(e) => this.moveTokenWithKeys(e, token)}
         onFocus={(e) => this.selectToken(e, token)}
         onBlur={(e) => this.unselectToken(e, token)}
+        onContextMenu={(e) => {e.preventDefault(); this.removeTokenFromBoard(token)}}
       ></img>
     );
   };

@@ -17,7 +17,8 @@ def on_connect():
 @socketio.on('updatePlayerPositions')
 def update_game_state(player_position_update):
     global player_positions
-    player_positions = {**player_positions, **player_position_update}
+    print(player_position_update)
+    player_positions = player_position_update
     emit('playerPositions', player_positions, broadcast=True)
 
 @socketio.on('updateBoardColors')
