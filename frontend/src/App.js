@@ -17,6 +17,25 @@ class App extends React.Component {
     };
   }
 
+  handleGlobalKeyDown = (e) => {
+    switch( e.key ) {
+      case "Escape":
+          this.setSelectedToken("");
+          this.setDrawingColor("");
+          break;
+      default: 
+          break;
+    }
+  }
+
+  componentDidMount() {
+    window.addEventListener("keydown", this.handleGlobalKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.handleGlobalKeyDown);
+  }
+
   closeNav = (e) => {
     this.navBarRef.current.style.width = "25px";
     this.mainContentRef.current.style.paddingLeft = "25px";

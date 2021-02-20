@@ -29,9 +29,6 @@ class Menu extends React.Component {
             icon={faUserPlus}
           />
           <div className="dropdown-content">
-            <a href="#" onClick={() => this.props.setSelectedToken("")}>
-              Done Adding Tokens
-            </a>
             <form>
               <label>
                 <input placeholder="Search for token" type="text" value={this.state.tokenSearchText} onChange={this.updateTokenSearchText} />
@@ -51,9 +48,6 @@ class Menu extends React.Component {
             icon={faPaintBrush}
           />
           <div className="dropdown-content">
-            <a href="#" onClick={() => this.props.setDrawingColor("")}>
-              Done Drawing
-            </a>
             <a href="#" onClick={() => this.props.setDrawingColor("white")}>
               white
             </a>
