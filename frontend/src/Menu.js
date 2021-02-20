@@ -1,18 +1,26 @@
 import React from "react";
 import "./Menu.css";
-import bard_picture from "./images/bard.png";
-import cleric_picture from "./images/cleric.png";
-import knight_picture from "./images/knight.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserPlus, faPaintBrush } from "@fortawesome/free-solid-svg-icons";
 
 class Menu extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      tokenSearchText: ""
+    };
+  }
+
+  updateTokenSearchText = (e) => {
+    this.setState({tokenSearchText: e.target.value});
   }
 
   render() {
+    const r = require.context('./images', false, /\.png$/)
+    const images = r.keys().map((item, _) => {
+      return {name: item.replace('./', '').replace(".png", ""), url: r(item)}
+    });
+
     return (
       <div className="container">
         <div className="dropdown" style={{ cursor: "pointer" }}>
@@ -21,18 +29,19 @@ class Menu extends React.Component {
             icon={faUserPlus}
           />
           <div className="dropdown-content">
-            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": bard_picture})}>
-              Bard
-            </a>
-            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": cleric_picture})}>
-              Cleric
-            </a>
-            <a href="#" onClick={() => this.props.setSelectedToken({"imgUrl": knight_picture})}>
-              Knight
-            </a>
             <a href="#" onClick={() => this.props.setSelectedToken("")}>
               Done Adding Tokens
             </a>
+            <form>
+              <label>
+                <input placeholder="Search for token" type="text" value={this.state.tokenSearchText} onChange={this.updateTokenSearchText} />
+              </label>
+            </form>
+            {images.filter(image => image.name.includes(this.state.tokenSearchText)).map((image, i) => {
+              return <a key={i} href="#" onClick={() => this.props.setSelectedToken({"imgUrl": image.url})}>
+                {image.name}
+              </a>
+            })}
           </div>
         </div>
         <div className="dropdown" style={{ cursor: "pointer" }}>
