@@ -21,6 +21,7 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
+    this.socket.emit('join', {room: this.props.room});
     this.socket.on(
       "playerPositions",
       function (playerPositions) {
@@ -33,6 +34,14 @@ class Board extends React.Component {
         this.setState({ boardColors: boardColors });
       }.bind(this)
     );
+  }
+
+  socketUpdatePlayerPositions = (newTokenIdToTokenData) => {
+    this.socket.emit("updatePlayerPositions", {room: this.props.room, playerPositions: newTokenIdToTokenData});
+  }
+
+  socketUpdateBoardColors = (newBoardColors) => {
+    this.socket.emit("updateBoardColors", {room: this.props.room, boardColors: newBoardColors});
   }
 
   calculateAspectRatioFit(originalWidth, originalHeight, maxWidth, maxHeight) {
@@ -84,7 +93,7 @@ class Board extends React.Component {
     this.setState({
       tokenIdToTokenData: newTokenIdToTokenData,
     });
-    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
+    this.socketUpdatePlayerPositions(newTokenIdToTokenData);
   }
 
   moveTokenWithKeys = (e, token) => {
@@ -123,14 +132,14 @@ class Board extends React.Component {
       col: cellIndex % this.state.numCols,
     };
     this.setState({ tokenIdToTokenData: newTokenIdToTokenData });
-    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
+    this.socketUpdatePlayerPositions(newTokenIdToTokenData);
   }
 
   removeTokenFromBoard = (token) => {
     const newTokenIdToTokenData = { ...this.state.tokenIdToTokenData };
     delete newTokenIdToTokenData[token.id];
     this.setState({ tokenIdToTokenData: newTokenIdToTokenData });
-    this.socket.emit("updatePlayerPositions", newTokenIdToTokenData);
+    this.socketUpdatePlayerPositions(newTokenIdToTokenData);
   }
 
   handleCellClick = (cellIndex) => {
@@ -138,7 +147,7 @@ class Board extends React.Component {
       const newBoardColors = { ...this.state.boardColors };
       newBoardColors[cellIndex] = this.props.drawingColor;
       this.setState({ boardColors: newBoardColors });
-      this.socket.emit("updateBoardColors", newBoardColors);
+      this.socketUpdateBoardColors(newBoardColors);
     } else if (this.props.selectedToken !== "") {
       this.addTokenToBoard(this.props.selectedToken, cellIndex);
     }

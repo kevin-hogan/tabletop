@@ -1,31 +1,50 @@
 import os
-from flask import Flask, send_from_directory
-from flask_socketio import SocketIO, send, emit
+import random
+import string
+from flask import Flask, send_from_directory, request, jsonify, redirect
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from flask_cors import CORS
 
 app = Flask(__name__, static_folder="frontend/build")
 app.config['SECRET_KEY'] = 'secret!'
+app.config['HTTP_PROTOCOL'] = 'http'
+app.config['HOSTNAME'] = 'localhost:3000' # For dev, we set this to where the client is hosted from
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-player_positions = {}
-board_colors = {}
+PLAYER_POSITIONS_KEY = 'playerPositions'
+BOARD_COLORS_KEY = 'boardColors'
+ROOM_KEY = 'room'
+board_states = {}
 
-@socketio.on('connect')
-def on_connect():
-    emit('playerPositions', player_positions)
-    emit('boardColors', board_colors)
+@socketio.on('join')
+def on_join(data):
+    room = data[ROOM_KEY]
+    join_room(room)
+    emit(PLAYER_POSITIONS_KEY, board_states[room][PLAYER_POSITIONS_KEY], room=request.sid)
+    emit(BOARD_COLORS_KEY, board_states[room][BOARD_COLORS_KEY], room=request.sid)
 
 @socketio.on('updatePlayerPositions')
-def update_game_state(player_position_update):
-    global player_positions
-    print(player_position_update)
-    player_positions = player_position_update
-    emit('playerPositions', player_positions, broadcast=True)
+def update_player_positions(player_position_update):
+    global board_states
+    room = player_position_update[ROOM_KEY]
+    board_states[room][PLAYER_POSITIONS_KEY] = player_position_update[PLAYER_POSITIONS_KEY]
+    emit(PLAYER_POSITIONS_KEY, player_position_update[PLAYER_POSITIONS_KEY], room=room)
 
 @socketio.on('updateBoardColors')
 def update_board_colors(board_colors_update):
-    global board_colors
-    board_colors = {**board_colors, **board_colors_update}
-    emit('boardColors', board_colors, broadcast=True)
+    global board_states
+    room = board_colors_update[ROOM_KEY]
+    board_states[room][BOARD_COLORS_KEY] = board_colors_update[BOARD_COLORS_KEY]
+    emit(BOARD_COLORS_KEY, board_colors_update[BOARD_COLORS_KEY], room=room)
+
+@app.route('/room', methods=['POST'])
+def create_room():
+    global board_states
+    room = ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
+    board_states[room] = {PLAYER_POSITIONS_KEY: {}, BOARD_COLORS_KEY: {}}
+    return jsonify({ROOM_KEY: room})
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

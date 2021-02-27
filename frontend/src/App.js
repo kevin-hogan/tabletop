@@ -82,7 +82,11 @@ class App extends React.Component {
           ref={this.mainContentRef}
           style={{ paddingLeft: 150, textAlign:"center", transition: "padding-left .5s" }}
         >
-          <Board drawingColor={this.state.drawingColor} selectedToken={this.state.selectedToken}/>
+          <Board 
+            drawingColor={this.state.drawingColor}
+            selectedToken={this.state.selectedToken}
+            room={this.props.match.params.room}
+          />
         </div>
       </div>
     );
