@@ -7,8 +7,6 @@ from flask_cors import CORS
 
 app = Flask(__name__, static_folder="frontend/build")
 app.config['SECRET_KEY'] = 'secret!'
-app.config['HTTP_PROTOCOL'] = 'http'
-app.config['HOSTNAME'] = 'localhost:3000' # For dev, we set this to where the client is hosted from
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
