@@ -16,7 +16,7 @@ class Home extends React.Component {
         return response.json();
       })
       .then(function (responseJson) {
-        this.props.history.push("/tabletop/" + responseJson["room"])
+        window.open("/tabletop/" + responseJson["room"], "_blank")
       }.bind(this))
   }
 
