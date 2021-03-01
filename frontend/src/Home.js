@@ -22,7 +22,11 @@ class Home extends React.Component {
 
   render() {
     return (
-      <button onClick={this.createRoom}>Create new room</button>
+      <div className="homepage-content">
+        <h1>RPG Tabletop Live</h1>
+        <p><i>The simplest virtual tabletop around</i></p>
+        <button onClick={this.createRoom}>Create new</button>
+      </div>
     );
   }
 }
