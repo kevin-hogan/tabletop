@@ -18,13 +18,13 @@ class App extends React.Component {
   }
 
   handleGlobalKeyDown = (e) => {
-    switch( e.key ) {
+    switch (e.key) {
       case "Escape":
-          this.setSelectedToken("");
-          this.setDrawingColor("");
-          break;
-      default: 
-          break;
+        this.setSelectedToken("");
+        this.setDrawingColor("");
+        break;
+      default:
+        break;
     }
   }
 
@@ -38,6 +38,7 @@ class App extends React.Component {
 
   closeNav = (e) => {
     this.navBarRef.current.style.width = "25px";
+    this.navBarRef.current.style.overflowX = "hidden";
     this.mainContentRef.current.style.paddingLeft = "25px";
     this.setState({ isNavOpen: false });
   };
@@ -48,12 +49,20 @@ class App extends React.Component {
     this.setState({ isNavOpen: true });
   };
 
+  toggleOverflow = () => {
+    if (this.navBarRef.current.style.overflowX == "visible") {
+      this.navBarRef.current.style.overflowX = "hidden";
+    } else if (this.state.isNavOpen) {
+      this.navBarRef.current.style.overflowX = "visible";
+    }
+  }
+
   setSelectedToken = (token) => {
-    this.setState({selectedToken: token});
+    this.setState({ selectedToken: token });
   }
 
   setDrawingColor = (color) => {
-    this.setState({drawingColor: color});
+    this.setState({ drawingColor: color });
   }
 
   render() {
@@ -64,8 +73,14 @@ class App extends React.Component {
       cursor = "copy"
     }
     return (
-      <div className="App" style={{cursor: cursor}}>
-        <div id="mySidenav" className="sidenav" ref={this.navBarRef}>
+      <div className="App" style={{ cursor: cursor }}>
+        <div
+          id="mySidenav"
+          style={{ overflowX: "visible" }}
+          className="sidenav" 
+          ref={this.navBarRef} 
+          onTransitionEnd={this.toggleOverflow}
+        >
           <FontAwesomeIcon
             icon={this.state.isNavOpen ? faArrowLeft : faArrowRight}
             onClick={this.state.isNavOpen ? this.closeNav : this.openNav}
@@ -76,13 +91,13 @@ class App extends React.Component {
               right: "10px",
             }}
           />
-          <Menu setSelectedToken={this.setSelectedToken} setDrawingColor={this.setDrawingColor}/>
+          <Menu setSelectedToken={this.setSelectedToken} setDrawingColor={this.setDrawingColor} />
         </div>
         <div
           ref={this.mainContentRef}
-          style={{ paddingLeft: 150, textAlign:"center", transition: "padding-left .5s" }}
+          style={{ paddingLeft: 150, textAlign: "center", transition: "padding-left .5s" }}
         >
-          <Board 
+          <Board
             drawingColor={this.state.drawingColor}
             selectedToken={this.state.selectedToken}
             room={this.props.match.params.room}
