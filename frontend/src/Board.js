@@ -8,7 +8,7 @@ const BOARD_WIDTH = 1500;
 class Board extends React.Component {
   constructor(props) {
     super(props);
-    this.socket = io("http://localhost:5000");
+    this.socket = io(window.origin);
     this.state = {
       socket: null,
       numRows: 13,

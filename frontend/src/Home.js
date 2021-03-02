@@ -8,7 +8,8 @@ class Home extends React.Component {
   }
 
   createRoom = () => {
-    return fetch("http://localhost:5000/room", {
+    const windowReference = window.open();
+    return fetch(window.origin + "/room", {
       method: "POST",
       mode: "cors"
     })
@@ -16,7 +17,7 @@ class Home extends React.Component {
         return response.json();
       })
       .then(function (responseJson) {
-        window.open("/tabletop/" + responseJson["room"], "_blank")
+	windowReference.location = "/tabletop/" + responseJson["room"];
       }.bind(this))
   }
 
